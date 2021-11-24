@@ -10,7 +10,7 @@ const {
   formatTime,
 } = require("truedata-nodejs");
 const app = express();
-const port = 80;
+const port = 8845;
 const user = "tdws150";
 const pwd = "shubham@150";
 const portSocket = 8082;
