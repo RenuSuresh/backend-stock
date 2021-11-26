@@ -23,15 +23,19 @@ const wss = new WebSocket.Server({ server });
 var data = "Real-Time Update 1";
 var number = 1;
 var touchlineData;
-var tickData;
+var tickData = {};
 var bidaskData;
 var barData;
+for (const symbol of symbols) {
+  tickData[symbol] = {};
+}
+console.log("tickData>>>", tickData);
 
 rtConnect(user, pwd, symbols, portSocket, (bidask = 1), (heartbeat = 1));
 rtFeed.on("touchline", touchlineHandler); // Receives Touchline Data
 rtFeed.on("tick", tickHandler); // Receives Tick data
-rtFeed.on("bidask", bidaskHandler); // Receives Bid Ask Data if enabled
-rtFeed.on("bar", barHandler); // Receives 1min and 5min bar data
+// rtFeed.on("bidask", bidaskHandler); // Receives Bid Ask Data if enabled
+// rtFeed.on("bar", barHandler); // Receives 1min and 5min bar data
 
 function touchlineHandler(touchline) {
   const altObj = Object.fromEntries(
@@ -41,8 +45,9 @@ function touchlineHandler(touchline) {
 }
 
 function tickHandler(tick) {
-  console.log("tick>>>");
-  console.log(tick);
+  const tempTick = tick;
+  tickData[tick.Symbol] = tempTick;
+  console.log(">>>>>>>>>>>>>", tickData);
 }
 
 function bidaskHandler(bidask) {
@@ -55,6 +60,7 @@ function barHandler(bar) {
   console.log(bar);
 }
 
+// FOR CLIENT WS
 wss.on("connection", (ws) => {
   var receivedSymbol;
   ws.on("message", (message) => {
@@ -65,9 +71,16 @@ wss.on("connection", (ws) => {
 
   var interval = setInterval(function () {
     data = "Real-Time Update " + number;
+
     // console.log("SENT: " + data);
-    const sendData = touchlineData[receivedSymbol];
-    ws.send(JSON.stringify(sendData));
+    // const sendData = touchlineData[receivedSymbol];
+    for (const symbol of receivedSymbol) {
+      const sendData = tickData[symbol];
+      ws.send(JSON.stringify(sendData));
+    }
+
+    // ws.send(JSON.stringify(sendData));
+    console.log("tick>>>>");
     number++;
   }, 1000);
 
