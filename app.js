@@ -14,7 +14,28 @@ const port = 8845;
 const user = "tdws150";
 const pwd = "shubham@150";
 const portSocket = 8082;
-const symbols = ["WIPRO", "INFY", "TCS", "MINDTREE", "RELIANCE"];
+const symbols = [
+  "NIFTY 50",
+  "SBIN",
+  "IOC",
+  "HDFCBANK",
+  "POWERGRID",
+  "RELIANCE",
+  "HINDUNILVR",
+  "DIVISLAB",
+  "ICICIBANK",
+  "SUNPHARMA",
+  "NESTLEIND",
+  "ASIANPAINT",
+  "HDFC",
+  "SBILIFE",
+  "INFY",
+  "ITC",
+  "BHARTIARTL",
+  "AXISBANK",
+  "TITAN",
+  "TATACONSUM",
+];
 app.use("/", express.static("public"));
 
 const server = http.createServer(app);
@@ -29,7 +50,6 @@ var barData;
 for (const symbol of symbols) {
   tickData[symbol] = {};
 }
-console.log("tickData>>>", tickData);
 
 rtConnect(user, pwd, symbols, portSocket, (bidask = 1), (heartbeat = 1));
 rtFeed.on("touchline", touchlineHandler); // Receives Touchline Data
@@ -47,7 +67,7 @@ function touchlineHandler(touchline) {
 function tickHandler(tick) {
   const tempTick = tick;
   tickData[tick.Symbol] = tempTick;
-  console.log(">>>>>>>>>>>>>", tickData);
+  // console.log(">>>>>>>>>>>>>", tickData);
 }
 
 function bidaskHandler(bidask) {
@@ -79,8 +99,6 @@ wss.on("connection", (ws) => {
       ws.send(JSON.stringify(sendData));
     }
 
-    // ws.send(JSON.stringify(sendData));
-    console.log("tick>>>>");
     number++;
   }, 1000);
 
