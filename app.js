@@ -9,6 +9,9 @@ const {
   historical,
   formatTime,
 } = require("truedata-nodejs");
+const schedule = require("node-schedule");
+const axios = require("axios");
+const { log } = require("console");
 const app = express();
 const port = 8845;
 const user = "tdws150";
@@ -47,6 +50,9 @@ var touchlineData;
 var tickData = {};
 var bidaskData;
 var barData;
+var tournamentData = {};
+var tounamentsList = {};
+
 for (const symbol of symbols) {
   tickData[symbol] = {};
 }
@@ -54,8 +60,6 @@ for (const symbol of symbols) {
 rtConnect(user, pwd, symbols, portSocket, (bidask = 1), (heartbeat = 1));
 rtFeed.on("touchline", touchlineHandler); // Receives Touchline Data
 rtFeed.on("tick", tickHandler); // Receives Tick data
-// rtFeed.on("bidask", bidaskHandler); // Receives Bid Ask Data if enabled
-// rtFeed.on("bar", barHandler); // Receives 1min and 5min bar data
 
 function touchlineHandler(touchline) {
   const altObj = Object.fromEntries(
@@ -67,7 +71,6 @@ function touchlineHandler(touchline) {
 function tickHandler(tick) {
   const tempTick = tick;
   tickData[tick.Symbol] = tempTick;
-  // console.log(">>>>>>>>>>>>>", tickData);
 }
 
 function bidaskHandler(bidask) {
@@ -81,35 +84,98 @@ function barHandler(bar) {
 }
 
 // FOR CLIENT WS
-wss.on("connection", (ws) => {
-  var receivedSymbol;
-  ws.on("message", (message) => {
-    const msg = JSON.parse(message);
-    receivedSymbol = msg.symbol;
-    console.log(`Received message => ${message}`);
-  });
+wss.on("connection", (ws, req) => {
+  console.log("req>>>", req.url);
+  switch (req.url) {
+    case "/marketdata":
+      {
+        var receivedSymbol;
+        ws.on("message", (message) => {
+          const msg = JSON.parse(message);
+          receivedSymbol = msg.symbol;
+          console.log(`Received message => ${message}`);
+        });
 
-  var interval = setInterval(function () {
-    data = "Real-Time Update " + number;
+        var interval = setInterval(function () {
+          data = "Real-Time Update " + number;
 
-    // console.log("SENT: " + data);
-    // const sendData = touchlineData[receivedSymbol];
-    for (const symbol of receivedSymbol) {
-      const sendData = tickData[symbol];
-      ws.send(JSON.stringify(sendData));
+          // console.log("SENT: " + data);
+          // const sendData = touchlineData[receivedSymbol];
+          for (const symbol of receivedSymbol) {
+            const sendData = tickData[symbol];
+            ws.send(JSON.stringify(sendData));
+          }
+          number++;
+        }, 1000);
+      }
+      break;
+    case `/leaderboard`: {
+      var receivedSlug;
+      ws.on("message", (message) => {
+        const msg = JSON.parse(message);
+        receivedSlug = msg.tournamentSlug;
+      });
+      var interval = setInterval(function () {
+        data = "Real-Time Update " + number;
+        if (tounamentsList[receivedSlug]) {
+          tounamentsList[receivedSlug].userTournaments.sort(function (a, b) {
+            return b.score - a.score;
+          });
+
+          tounamentsList[receivedSlug].userTournaments = tounamentsList[
+            receivedSlug
+          ].userTournaments.slice(0, 5);
+          ws.send(JSON.stringify(tounamentsList[receivedSlug]));
+        }
+
+        number++;
+      }, 1000);
+      ws.on("close", function close() {
+        clearInterval(interval);
+      });
     }
-
-    number++;
-  }, 1000);
-
+  }
   ws.on("close", function close() {
     clearInterval(interval);
   });
 });
 
-function randomInteger(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+const job = schedule.scheduleJob("* */2 * * * *", function () {
+  // console.log("The answer to life, the universe, and everything!");
+  axios
+    .get(
+      "https://mvp.dev.stockpe.in/api/v1/mvp/socket-data-provider/tournament-data"
+    )
+    .then((res) => {
+      if (tickData) {
+        tournamentData = res.data;
+
+        const job1 = schedule.scheduleJob("*/1 * * * * *", function () {
+          const altObj = Object.fromEntries(
+            Object.entries(tournamentData).map(([key, value]) => [
+              value.slug,
+              value,
+            ])
+          );
+          tounamentsList = altObj;
+
+          for (const tour in tounamentsList) {
+            for (const userandTournament of tounamentsList[tour]
+              .userTournaments) {
+              userandTournament["score"] = userandTournament.availableCredits;
+              for (const userOrder of userandTournament.userOrders) {
+                const cal =
+                  userOrder.quantity * tickData[userOrder.scriptName].LTP;
+                userandTournament["score"] += cal;
+              }
+            }
+          }
+        });
+      }
+    });
+});
+
+// websocket participants
 
 server.listen(port, () => {
   console.log(`Listening at http://localhost:${port}`);
