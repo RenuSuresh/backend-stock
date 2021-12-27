@@ -144,7 +144,7 @@ const job = schedule.scheduleJob("* */2 * * * *", function () {
   // console.log("The answer to life, the universe, and everything!");
   axios
     .get(
-      "https://mvp.dev.stockpe.in/api/v1/mvp/socket-data-provider/tournament-data"
+      "https://mvp.stockpe.in/api/v1/mvp/socket-data-provider/tournament-data"
     )
     .then((res) => {
       if (tickData) {
