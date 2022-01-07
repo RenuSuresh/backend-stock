@@ -97,7 +97,9 @@ wss.on("connection", (ws, req) => {
         var interval = setInterval(function () {
           data = "Real-Time Update " + number;
           for (const symbol of receivedSymbol) {
-            const sendData = tickData[symbol];
+            const sendData = tickData[symbol]
+              ? tickData[symbol]
+              : touchlineData[symbol];
             ws.send(JSON.stringify(sendData));
           }
           number++;
