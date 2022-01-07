@@ -88,10 +88,10 @@ wss.on("connection", (ws, req) => {
   switch (req.url) {
     case "/marketdata":
       {
-        var receivedSymbol=[];
+        var receivedSymbol = [];
         ws.on("message", (message) => {
           const msg = JSON.parse(message);
-          receivedSymbol = msg.symbol;          
+          receivedSymbol = msg.symbol;
         });
 
         var interval = setInterval(function () {
@@ -136,8 +136,7 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-const job = schedule.scheduleJob("* */2 * * * *", function () {
-  // console.log("The answer to life, the universe, and everything!");
+const job = schedule.scheduleJob("*/1 * * * * *", function () {
   axios
     .get(
       "https://mvp.stockpe.in/api/v1/mvp/socket-data-provider/tournament-data"
@@ -160,8 +159,13 @@ const job = schedule.scheduleJob("* */2 * * * *", function () {
               .userTournaments) {
               userandTournament["score"] = userandTournament.availableCredits;
               for (const userOrder of userandTournament.userOrders) {
-                const cal =
+                let cal =
                   userOrder.quantity * tickData[userOrder.scriptName].LTP;
+                if (isNaN(cal)) {
+                  cal =
+                    userOrder.quantity *
+                    touchlineData[userOrder.scriptName].LTP;
+                }
                 userandTournament["score"] += cal;
               }
             }
