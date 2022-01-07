@@ -73,34 +73,29 @@ function tickHandler(tick) {
   tickData[tick.Symbol] = tempTick;
 }
 
-function bidaskHandler(bidask) {
-  console.log("bidask>>>");
-  console.log(bidask);
-}
+// function bidaskHandler(bidask) {
+//   console.log("bidask>>>");
+//   console.log(bidask);
+// }
 
-function barHandler(bar) {
-  console.log("bar>>>");
-  console.log(bar);
-}
+// function barHandler(bar) {
+//   console.log("bar>>>");
+//   console.log(bar);
+// }
 
 // FOR CLIENT WS
 wss.on("connection", (ws, req) => {
-  console.log("req>>>", req.url);
   switch (req.url) {
     case "/marketdata":
       {
         var receivedSymbol=[];
         ws.on("message", (message) => {
           const msg = JSON.parse(message);
-          receivedSymbol = msg.symbol;
-          console.log(`Received message => ${message}`);
+          receivedSymbol = msg.symbol;          
         });
 
         var interval = setInterval(function () {
           data = "Real-Time Update " + number;
-
-          // console.log("SENT: " + data);
-          // const sendData = touchlineData[receivedSymbol];
           for (const symbol of receivedSymbol) {
             const sendData = tickData[symbol];
             ws.send(JSON.stringify(sendData));
@@ -109,6 +104,7 @@ wss.on("connection", (ws, req) => {
         }, 1000);
       }
       break;
+
     case `/leaderboard`: {
       var receivedSlug;
       ws.on("message", (message) => {
@@ -178,5 +174,5 @@ const job = schedule.scheduleJob("* */2 * * * *", function () {
 // websocket participants
 
 server.listen(port, () => {
-  console.log(`Listening at http://localhost:${port}`);
+  console.log(`Stock Socket Application started with port:${port}`);
 });
