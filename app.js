@@ -124,7 +124,7 @@ wss.on("connection", (ws, req) => {
 
           tounamentsList[receivedSlug].userTournaments = tounamentsList[
             receivedSlug
-          ].userTournaments.slice(0, 5);
+          ].userTournaments.slice(0, 20);
           ws.send(JSON.stringify(tounamentsList[receivedSlug]));
         }
 
