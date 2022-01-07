@@ -89,7 +89,7 @@ wss.on("connection", (ws, req) => {
   switch (req.url) {
     case "/marketdata":
       {
-        var receivedSymbol;
+        var receivedSymbol=[];
         ws.on("message", (message) => {
           const msg = JSON.parse(message);
           receivedSymbol = msg.symbol;
