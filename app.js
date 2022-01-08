@@ -95,14 +95,14 @@ wss.on("connection", (ws, req) => {
         });
 
         var interval = setInterval(function () {
-          data = "Real-Time Update " + number;
           for (const symbol of receivedSymbol) {
-            const sendData = tickData[symbol]
-              ? tickData[symbol]
-              : touchlineData[symbol];
+            const sendData =
+              Object.keys(tickData[symbol]).length > 0
+                ? tickData[symbol]
+                : touchlineData[symbol];
+
             ws.send(JSON.stringify(sendData));
           }
-          number++;
         }, 1000);
       }
       break;
@@ -114,7 +114,6 @@ wss.on("connection", (ws, req) => {
         receivedSlug = msg.tournamentSlug;
       });
       var interval = setInterval(function () {
-        data = "Real-Time Update " + number;
         if (tounamentsList[receivedSlug]) {
           tounamentsList[receivedSlug].userTournaments.sort(function (a, b) {
             return b.score - a.score;
@@ -125,8 +124,6 @@ wss.on("connection", (ws, req) => {
           ].userTournaments.slice(0, 20);
           ws.send(JSON.stringify(tounamentsList[receivedSlug]));
         }
-
-        number++;
       }, 1000);
       ws.on("close", function close() {
         clearInterval(interval);
@@ -161,13 +158,11 @@ const job = schedule.scheduleJob("*/1 * * * * *", function () {
               .userTournaments) {
               userandTournament["score"] = userandTournament.availableCredits;
               for (const userOrder of userandTournament.userOrders) {
-                let cal =
-                  userOrder.quantity * tickData[userOrder.scriptName].LTP;
-                if (isNaN(cal)) {
-                  cal =
-                    userOrder.quantity *
+                let cal = tickData[userOrder.scriptName].LTP
+                  ? userOrder.quantity * tickData[userOrder.scriptName].LTP
+                  : userOrder.quantity *
                     touchlineData[userOrder.scriptName].LTP;
-                }
+
                 userandTournament["score"] += cal;
               }
             }
