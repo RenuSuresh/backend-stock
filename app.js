@@ -118,10 +118,6 @@ wss.on("connection", (ws, req) => {
           tounamentsList[receivedSlug].userTournaments.sort(function (a, b) {
             return b.score - a.score;
           });
-
-          tounamentsList[receivedSlug].userTournaments = tounamentsList[
-            receivedSlug
-          ].userTournaments;
           ws.send(JSON.stringify(tounamentsList[receivedSlug]));
         }
       }, 1000);
