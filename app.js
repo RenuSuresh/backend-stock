@@ -170,6 +170,11 @@ const job = schedule.scheduleJob("*/1 * * * * *", function () {
 
 // websocket participants
 
+// API send LTP of stocks
+app.get("/get-ltp", function (req, res) {
+  res.send(touchlineData);
+});
+
 server.listen(port, () => {
   console.log(`Stock Socket Application started with port:${port}`);
 });
