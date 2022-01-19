@@ -119,9 +119,8 @@ wss.on("connection", (ws, req) => {
             return b.score - a.score;
           });
 
-          tounamentsList[receivedSlug].userTournaments = tounamentsList[
-            receivedSlug
-          ].userTournaments.slice(0, 20);
+          // tounamentsList[receivedSlug].userTournaments =
+          //   tounamentsList[receivedSlug].userTournaments;
           ws.send(JSON.stringify(tounamentsList[receivedSlug]));
         }
       }, 1000);
@@ -143,7 +142,6 @@ const job = schedule.scheduleJob("*/1 * * * * *", function () {
     .then((res) => {
       if (tickData) {
         tournamentData = res.data;
-
         const job1 = schedule.scheduleJob("*/1 * * * * *", function () {
           const altObj = Object.fromEntries(
             Object.entries(tournamentData).map(([key, value]) => [
@@ -157,12 +155,13 @@ const job = schedule.scheduleJob("*/1 * * * * *", function () {
             for (const userandTournament of tounamentsList[tour]
               .userTournaments) {
               userandTournament["score"] = userandTournament.availableCredits;
-              for (const userOrder of userandTournament.userOrders) {
+              const order = userandTournament.userOrders;
+              delete userandTournament.userOrders;
+              for (const userOrder of order) {
                 let cal = tickData[userOrder.scriptName].LTP
                   ? userOrder.quantity * tickData[userOrder.scriptName].LTP
                   : userOrder.quantity *
                     touchlineData[userOrder.scriptName].LTP;
-
                 userandTournament["score"] += cal;
               }
             }
