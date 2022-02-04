@@ -109,9 +109,11 @@ wss.on("connection", (ws, req) => {
 
     case `/leaderboard`: {
       var receivedSlug;
+      let dataSize = 10;
       ws.on("message", (message) => {
         const msg = JSON.parse(message);
         receivedSlug = msg.tournamentSlug;
+        dataSize = msg.size;
       });
       var interval = setInterval(function () {
         if (tounamentsList[receivedSlug]) {
@@ -120,7 +122,7 @@ wss.on("connection", (ws, req) => {
           });
           tounamentsList[receivedSlug].userTournaments = tounamentsList[
             receivedSlug
-          ].userTournaments.slice(0, 20);
+          ].userTournaments.slice(0, dataSize);
           ws.send(JSON.stringify(tounamentsList[receivedSlug]));
         }
       }, 1000);
